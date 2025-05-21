@@ -1,6 +1,6 @@
+from dotenv import load_dotenv
 import argparse
 import os
-from dotenv import load_dotenv
 import uvicorn
 
 if __name__ == "__main__":

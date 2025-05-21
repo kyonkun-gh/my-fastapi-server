@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.settings.config import get_settings
-from app.models.request_model import RequestModel
+from app.models.request_model import RemoteRequestModel
+from app.session import get_session_manager
 import requests
-import json
 
 app = FastAPI()
 
@@ -15,53 +15,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+
 @app.get("/")
 async def root():
     return {"message": "Hello FastAPI with Uvicorn!"}
 
 @app.get("/env")
 def get_env():
-    settings = get_settings()
-    return {
-        "app_name": settings.app_name,
-        "app_version": settings.app_version,
-        "app_mode": settings.app_mode,
-        "port": settings.port,
-        "reload": settings.reload,
-        "database_url": settings.database_url
-    }
+    return get_settings().to_dict()
 
 @app.post("/remoteRequest")
-def remote_request(request: RequestModel):
-    url = request.url
-    method = request.method
-    data = request.data
+def remote_request(request: RemoteRequestModel):
+    url = request.remote_url
+    method = request.remote_method
+    data = request.remote_data
     print( f"url={url}, method={method}, data={data}" )
-    
-    try:
-        json_data = json.loads(data)
-    except json.JSONDecodeError:
-        return {
-            "status": 400,
-            "error": "Invalid JSON"
-        }
-    
-    for key, value in json_data.items():
-        print(f"Key: {key}, Value: {value}")
-    
-    session = requests.Session()
-    settings = get_settings()
-    if settings.http_proxy != "" and settings.https_proxy != "":
-        session.proxies = {
-            "http": settings.http_proxy,
-            "https": settings.https_proxy,
-        }
-        print( f"Proxy ON!!" )
 
+    session = get_session_manager().get_session()
     try:
         res = session.post(
             url,
-            json = json_data,
+            json = data,
         )
     except requests.exceptions.RequestException as e:
         return {

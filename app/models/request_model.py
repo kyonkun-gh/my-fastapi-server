@@ -1,6 +1,7 @@
 from pydantic import BaseModel
+from typing import Dict, Any
 
-class RequestModel(BaseModel):
-    url: str
-    method: str
-    data: str
+class RemoteRequestModel(BaseModel):
+    remote_url: str
+    remote_method: str
+    remote_data: Dict[str, Any]
