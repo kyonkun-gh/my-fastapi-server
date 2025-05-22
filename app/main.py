@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.settings.config import get_settings
-from app.models.request_model import RemoteRequestModel
+from app.models.remote_request_model import RemoteRequestModel
 from app.session import get_session_manager
 import requests
 
@@ -41,10 +41,13 @@ def remote_request(request: RemoteRequestModel):
     except requests.exceptions.RequestException as e:
         return {
             "status": 500,
-            "error": str(e)
+            "data": str(e),
         }
 
     return {
-        "status": res.status_code, 
-        "data": res.json(),
+        "status": 200,
+        "data": {
+            "remote_status": res.status_code,
+            "remote_data": res.json(),
+        },
     }
