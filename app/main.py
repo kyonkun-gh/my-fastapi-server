@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.settings.config import get_settings
 from app.models.remote_request_model import RemoteRequestModel
 from app.session import get_session_manager
-import requests
+from requests.exceptions import RequestException, HTTPError
 
 app = FastAPI()
 
@@ -32,13 +32,22 @@ def remote_request(request: RemoteRequestModel):
     data = request.remote_data
     print( f"url={url}, method={method}, data={data}" )
 
-    session = get_session_manager().get_session()
     try:
-        res = session.post(
-            url,
-            json = data,
-        )
-    except requests.exceptions.RequestException as e:
+        res = get_session_manager().send_request(url, method, data)
+    except ValueError as e:
+        return {
+            "status": 400,
+            "data": str(e),
+        }
+    except HTTPError as e:
+        return {
+            "status": 200,
+            "data": {
+                "remote_status": e.response.status_code,
+                "remote_data": str(e)
+            },
+        }
+    except RequestException as e:
         return {
             "status": 500,
             "data": str(e),

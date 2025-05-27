@@ -27,3 +27,21 @@ class SessionManager:
     
     def close_session(self):
         self.session.close()
+
+    def send_request(self, url: str, method: str, data: dict = None):
+        if method.upper() == "GET":
+            return self.send_request_get(url)
+        elif method.upper() == "POST":
+            return self.send_request_post(url, data)
+        else:
+            raise ValueError(f"Unsupported HTTP method: {method}")
+    
+    def send_request_get(self, url: str):
+        response = self.session.get(url)
+        response.raise_for_status()  # Raise an error for bad responses
+        return response
+
+    def send_request_post(self, url: str, data: dict):
+        response = self.session.post(url, json=data)
+        response.raise_for_status()  # Raise an error for bad responses
+        return response
